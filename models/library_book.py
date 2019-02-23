@@ -13,6 +13,11 @@ class LabraryBook(models.Model):
     name = fields.Char('Title', required=True)
     # short_name = fields.Char(string='Short Title',
     #                          size=100, required=True)
+    _sql_constraints = [
+        ('name_uniq',
+         'UNIQUE (name)',
+         'Book title must be unique.')
+    ]
     notes = fields.Text(string='Internal Notes')
     state = fields.Selection(
         [('draft', 'Not Available'),
@@ -46,6 +51,15 @@ class LabraryBook(models.Model):
     publisher_id = fields.Many2one(
         comodel_name='res.partner', string='Publisher'
     )
+
+    @api.constrains('date_release')
+    def _check_release_date(self):
+        for rec in self:
+            if (rec.date_release and
+                    rec.date_release > fields.Date.today()):
+                raise models.ValidationError(
+                    'Release must be in the past.'
+                )
 
 
 class ResPartner(models.Model):
